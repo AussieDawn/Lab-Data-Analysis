@@ -1,54 +1,53 @@
 Option Explicit
 
-' Contains general functions and subroutines
+Private plMap As PlateMap
+
+Private Sub btnClose_Click()
+    Unload Me
+End Sub
+
+Private Sub btnRun_Click()
+    RunAddWellIds
+End Sub
 
 
-' Return the path to the selected folder.
-Public Function GetFolderPath() As String
-    Dim fldr As FileDialog
-    Dim selectedFolder As String
-    Set fldr = Application.FileDialog(msoFileDialogFolderPicker)
-    With fldr
-        .Title = "Select a Folder"
-        .AllowMultiSelect = False
-        If .Show <> -1 Then GoTo NextCode
-        selectedFolder = .SelectedItems(1)
-    End With
-NextCode:
-    GetFolderPath = selectedFolder
-    Set fldr = Nothing
-End Function
-' Loop through all the sheets in the given excel file and return true if the given sheet name
-'  is present in this excel file. Otherwise return false.
-Public Function SheetExists(sheetName As String, excelFile As Workbook) As Boolean
-    Dim wkSh As Worksheet
-    For Each wkSh In excelFile.Worksheets
-        If wkSh.Name = sheetName Then
-            SheetExists = True
-            Exit Function
-        End If
-    Next wkSh
-    SheetExists = False
-End Function
-'Adds metadata to a sheet that it names "FileMetaData" and it then hides and protects the sheet using
-'  the provided password. Can add more meta data here as needed.
-Public Function AddMetaDataToNewExcelFile(excelFile As Workbook, metaDataText As String, pwdProtect As String) As Boolean
-    Dim wkSh As Worksheet
-    If SheetExists("Sheet1", excelFile) Then
-        Set wkSh = excelFile.Worksheets("Sheet1")
-    Else
-        Set wkSh = excelFile.Worksheets.Add
-        wkSh.Name = "Sheet1"
-    End If
-    wkSh.Name = "FileMetaData"
-    wkSh.Range("A1").Value = "Code Version"
-    wkSh.Range("B1").Value = modCodeInfo.CODE_VERSION
-    wkSh.Range("A2").Value = "Code Date"
-    wkSh.Range("B2").Value = modCodeInfo.CODE_DATE
-    wkSh.Range("A3").Value = "File Description"
-    wkSh.Range("B3").Value = metaDataText
-    wkSh.Range("A1:B3").Name = "FileMetaData"
-    wkSh.Protect pwdProtect
-    wkSh.Visible = xlSheetHidden
-End Function
+Private Sub btnSaveToNewWorkbook_Click()
+    Dim folderPath As String
+    Dim excelSaveToFilename As String
+    Dim fullOutputPath As String
+    Dim newExcelFile As Workbook
+    Dim sheetToCopy As Worksheet
+    Set sheetToCopy = ThisWorkbook.Worksheets("DataSheet")
+    folderPath = modUtils.GetFolderPath
+    excelSaveToFilename = Me.txtOutputFilename
+    fullOutputPath = folderPath & "\" & excelSaveToFilename
+    Set newExcelFile = Application.Workbooks.Add
+    sheetToCopy.Copy after:=newExcelFile.Sheets(newExcelFile.Sheets.Count)
+    Set sheetToCopy = ThisWorkbook.Worksheets("PlateMaps")
+    sheetToCopy.Copy after:=newExcelFile.Sheets(newExcelFile.Sheets.Count)
+    modUtils.AddMetaDataToNewExcelFile newExcelFile, Me.txtExcelFileMetaData, Me.txtPasswordToProtect
+    newExcelFile.SaveAs fullOutputPath, 51
+    newExcelFile.Close True
+End Sub
+
+Private Sub UserForm_Click()
+    
+End Sub
+
+Private Sub UserForm_Initialize()
+    Set plMap = New PlateMap
+End Sub
+
+Private Sub RunAddWellIds()
+    Dim plMapRng As Range
+    Dim embeddedWellIdRng As Range
+    Set plMapRng = Range(Me.refeditPlateMapRange.Value)
+    MsgBox plMapRng.Address
+    Set embeddedWellIdRng = Range(Me.refeditEmbeddedWellIdRange)
+    MsgBox embeddedWellIdRng.Address
+    plMap.SetPlateMapRng plMapRng
+    plMap.SetWellIdRng embeddedWellIdRng
+    plMap.AddWellIds
+    MsgBox "Done!"
+End Sub
 
