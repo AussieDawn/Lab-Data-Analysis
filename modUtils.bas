@@ -32,7 +32,7 @@ Public Function SheetExists(sheetName As String, excelFile As Workbook) As Boole
 End Function
 'Adds metadata to a sheet that it names "FileMetaData" and it then hides and protects the sheet using
 '  the provided password. Can add more meta data here as needed.
-Public Function AddMetaDataToNewExcelFile(excelFile As Workbook, metaDataText As String, pwdProtect As String) As Boolean
+Public Function AddMetaDataToNewExcelFile(excelFile As Workbook, metaDataText As String, pwdProtect As String, assayType As String, experimentName As String) As Boolean
     Dim wkSh As Worksheet
     If SheetExists("Sheet1", excelFile) Then
         Set wkSh = excelFile.Worksheets("Sheet1")
@@ -47,7 +47,15 @@ Public Function AddMetaDataToNewExcelFile(excelFile As Workbook, metaDataText As
     wkSh.Range("B2").Value = modCodeInfo.CODE_DATE
     wkSh.Range("A3").Value = "File Description"
     wkSh.Range("B3").Value = metaDataText
-    wkSh.Range("A1:B3").Name = "FileMetaData"
+    wkSh.Range("A4").Value = "Selected Assay Type"
+    wkSh.Range("B4").Value = assayType
+    wkSh.Range("A5").Value = "Experiment Name"
+    wkSh.Range("B5").Value = experimentName
+    wkSh.Range("A1:B5").Name = "FileMetaData"
     wkSh.Protect pwdProtect
     wkSh.Visible = xlSheetHidden
 End Function
+' Used by the button on sheet "RunCode".
+Public Sub ShowForm()
+    uiAddWellIds.Show
+End Sub
